@@ -14,13 +14,17 @@ public class ServerVersion {
             Class.forName("com.destroystokyo.paper.ParticleBuilder");
             isPaper = true;
         }catch (ClassNotFoundException ignored) {}
+        
+    	if(Bukkit.getServer().getClass().getPackage().getName().equals("org.bukkit.craftbukkit")) {
+    		return "v26_1";
+    	}
+    	
                 
         if(isPaper) {
         	
         	String brut = Bukkit.getBukkitVersion();
-        	
-        	Bukkit.broadcastMessage(brut);
-        	
+        	        	
+        	if(brut.equals("26.1-R0.1-SNAPSHOT")) version = "v26_1";
         	if(brut.equals("1.21.11-R0.1-SNAPSHOT")) version = "v1_21_R7";
         	if(brut.equals("1.21.9-R0.1-SNAPSHOT") | brut.equals("1.21.10-R0.1-SNAPSHOT")) version = "v1_21_R6";
         	if(brut.equals("1.21.6-R0.1-SNAPSHOT") | brut.equals("1.21.7-R0.1-SNAPSHOT") | brut.equals("1.21.8-R0.1-SNAPSHOT")) version = "v1_21_R5";

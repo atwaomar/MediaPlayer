@@ -143,6 +143,6 @@ public class MapUtilVersion {
         	return new v1_7_R4();
         }
 	    Bukkit.getLogger().warning("MediaPlayer do not support this server version ! You may encounter issues.");
-        return null;
+        return new v26_1();
 	}
 }

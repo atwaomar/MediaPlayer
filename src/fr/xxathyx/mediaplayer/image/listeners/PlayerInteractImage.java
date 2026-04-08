@@ -16,6 +16,7 @@ import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -140,13 +141,15 @@ public class PlayerInteractImage implements Listener {
 							
 					        boolean visible = true;
 					        
-					        if(plugin.getServerVersion().equals("v1_21_R7")  || plugin.getServerVersion().equals("v1_21_R6")  || plugin.getServerVersion().equals("v1_21_R5")  || plugin.getServerVersion().equals("v1_21_R4")  || plugin.getServerVersion().equals("v1_21_R3")  || plugin.getServerVersion().equals("v1_21_R2")  || plugin.getServerVersion().equals("v1_21_R1")  || plugin.getServerVersion().equals("v1_20_R4")  || plugin.getServerVersion().equals("v1_20_R3")  || plugin.getServerVersion().equals("v1_20_R2") || plugin.getServerVersion().equals("v1_20_R1") || plugin.getServerVersion().equals("v1_19_R3") || plugin.getServerVersion().equals("v1_19_R2") || plugin.getServerVersion().equals("v1_19_R1") || plugin.getServerVersion().equals("v1_18_R2") || plugin.getServerVersion().equals("v1_18_R1") ||
+					        if(plugin.getServerVersion().equals("v26_1")  || plugin.getServerVersion().equals("v1_21_R7")  || plugin.getServerVersion().equals("v1_21_R6")  || plugin.getServerVersion().equals("v1_21_R5")  || plugin.getServerVersion().equals("v1_21_R4")  || plugin.getServerVersion().equals("v1_21_R3")  || plugin.getServerVersion().equals("v1_21_R2")  || plugin.getServerVersion().equals("v1_21_R1")  || plugin.getServerVersion().equals("v1_20_R4")  || plugin.getServerVersion().equals("v1_20_R3")  || plugin.getServerVersion().equals("v1_20_R2") || plugin.getServerVersion().equals("v1_20_R1") || plugin.getServerVersion().equals("v1_19_R3") || plugin.getServerVersion().equals("v1_19_R2") || plugin.getServerVersion().equals("v1_19_R1") || plugin.getServerVersion().equals("v1_18_R2") || plugin.getServerVersion().equals("v1_18_R1") ||
 					        		plugin.getServerVersion().equals("v1_17_R1") || plugin.getServerVersion().equals("v1_16_R3") || plugin.getServerVersion().equals("v1_16_R2") ||
 					        		plugin.getServerVersion().equals("v1_16_R1")) {
 					        	visible = configuration.visible_screen_frames_support();
 					        }
 					        
 							for(int i = 0; i < frames.size(); i++) {
+								
+								if(plugin.getServerVersion().equals("v26_1")) ((org.bukkit.craftbukkit.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
 								
 								if(plugin.getServerVersion().equals("v1_21_R6")) {
 									if(plugin.isPaper() && !Bukkit.getBukkitVersion().equals("1.21.10-R0.1-SNAPSHOT")) {
@@ -190,6 +193,8 @@ public class PlayerInteractImage implements Listener {
 											ItemFrame itemFrame = (ItemFrame) player.getWorld().spawnEntity(first, EntityType.ITEM_FRAME);
 											itemFrame.setItem(new ItemStacks().getMap(image.getIds().get(0)));
 											
+											if(plugin.getServerVersion().equals("v26_1")) ((org.bukkit.craftbukkit.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+											
 											if(plugin.getServerVersion().equals("v1_21_R6")) {
 												if(plugin.isPaper() && !Bukkit.getBukkitVersion().equals("1.21.10-R0.1-SNAPSHOT")) {
 													((org.bukkit.craftbukkit.v1_21_R5.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
@@ -230,6 +235,196 @@ public class PlayerInteractImage implements Listener {
 							
 							player.sendMessage(configuration.image_placed(image.getName()));
 							SoundPlayer.playSound(player, SoundType.NOTIFICATION_UP);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void interactImage(PlayerInteractAtEntityEvent event) {
+			
+		
+		if(plugin.getServerVersion().equals("v26_1")) {
+			if(event.getRightClicked() instanceof ItemFrame) {
+				
+				Player player = event.getPlayer();
+			    
+				if(player.getItemInHand() != null && !player.getItemInHand().getType().equals(Material.AIR)) {
+					if(player.getItemInHand().hasItemMeta()) {
+						if(player.getItemInHand().getItemMeta().getDisplayName() != null) {
+							
+							String name = player.getItemInHand().getItemMeta().getDisplayName();
+							
+							name = name.replace(ChatColor.GOLD + "" + ChatColor.BOLD, "");
+							
+							if(new Image(name).getFile().exists()) {
+								
+								event.setCancelled(true);
+								
+								Image image = new Image(name);
+								
+								ArrayList<ItemFrame> frames = new ArrayList<>();
+								
+								for(int i = 0; i < image.getHeight(); i++) {
+									for(int j = 0; j < image.getWidth(); j++) {
+										
+										ItemFrame itemFrame = null;
+										
+										if(FacingLocation.getCardinalDirection(player).equals("N")) {
+											
+											if(getNearbyEntities(event.getRightClicked().getLocation().add(j, -i, 0), 0).toArray().length <= 0) {
+												player.sendMessage(configuration.image_invalid_screen());
+												SoundPlayer.playSound(player, SoundType.NOTIFICATION_DOWN);
+												return;
+											}
+											itemFrame = (ItemFrame) getNearbyEntities(event.getRightClicked().getLocation().add(j, -i, 0), 0).toArray()[0];
+										}
+										if(FacingLocation.getCardinalDirection(player).equals("E")) {
+											
+											if(getNearbyEntities(event.getRightClicked().getLocation().add(0, -i, j), 0).toArray().length <= 0) {
+												player.sendMessage(configuration.image_invalid_screen());
+												SoundPlayer.playSound(player, SoundType.NOTIFICATION_DOWN);
+												return;
+											}
+											itemFrame = (ItemFrame) getNearbyEntities(event.getRightClicked().getLocation().add(0, -i, j), 0).toArray()[0];
+										}
+										if(FacingLocation.getCardinalDirection(player).equals("S")) {
+											
+											if(getNearbyEntities(event.getRightClicked().getLocation().add(-j, -i, 0), 0).toArray().length <= 0) {
+												player.sendMessage(configuration.image_invalid_screen());
+												SoundPlayer.playSound(player, SoundType.NOTIFICATION_DOWN);
+												return;
+											}
+											itemFrame = (ItemFrame) getNearbyEntities(event.getRightClicked().getLocation().add(-j, -i, 0), 0).toArray()[0];
+										}
+										if(FacingLocation.getCardinalDirection(player).equals("W")) {
+											
+											if(getNearbyEntities(event.getRightClicked().getLocation().add(0, -i, -j), 0).toArray().length <= 0) {
+												player.sendMessage(configuration.image_invalid_screen());
+												SoundPlayer.playSound(player, SoundType.NOTIFICATION_DOWN);
+												return;
+											}
+											itemFrame = (ItemFrame) getNearbyEntities(event.getRightClicked().getLocation().add(0, -i, -j), 0).toArray()[0];
+										}									
+										if(itemFrame != null) {
+											frames.add(itemFrame);
+										}
+									}
+								}
+								
+								if(frames.size() < image.getIds().size()) {
+									player.sendMessage(configuration.image_invalid_screen());
+									SoundPlayer.playSound(player, SoundType.NOTIFICATION_DOWN);
+									return;
+								}
+								
+								if(player.isSneaking()) {
+									for(int i = 0; i < frames.size(); i++) frames.get(i).setItem(new ItemStack(new ItemStack(Material.AIR, 1)));
+									player.sendMessage(configuration.image_removed(image.getName()));
+									SoundPlayer.playSound(player, SoundType.NOTIFICATION_UP);
+									return;
+								}
+								
+						        boolean visible = true;
+						        
+						        if(plugin.getServerVersion().equals("v26_1")  || plugin.getServerVersion().equals("v1_21_R7")  || plugin.getServerVersion().equals("v1_21_R6")  || plugin.getServerVersion().equals("v1_21_R5")  || plugin.getServerVersion().equals("v1_21_R4")  || plugin.getServerVersion().equals("v1_21_R3")  || plugin.getServerVersion().equals("v1_21_R2")  || plugin.getServerVersion().equals("v1_21_R1")  || plugin.getServerVersion().equals("v1_20_R4")  || plugin.getServerVersion().equals("v1_20_R3")  || plugin.getServerVersion().equals("v1_20_R2") || plugin.getServerVersion().equals("v1_20_R1") || plugin.getServerVersion().equals("v1_19_R3") || plugin.getServerVersion().equals("v1_19_R2") || plugin.getServerVersion().equals("v1_19_R1") || plugin.getServerVersion().equals("v1_18_R2") || plugin.getServerVersion().equals("v1_18_R1") ||
+						        		plugin.getServerVersion().equals("v1_17_R1") || plugin.getServerVersion().equals("v1_16_R3") || plugin.getServerVersion().equals("v1_16_R2") ||
+						        		plugin.getServerVersion().equals("v1_16_R1")) {
+						        	visible = configuration.visible_screen_frames_support();
+						        }
+						        
+								for(int i = 0; i < frames.size(); i++) {
+									
+									if(plugin.getServerVersion().equals("v26_1")) ((org.bukkit.craftbukkit.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									
+									if(plugin.getServerVersion().equals("v1_21_R6")) {
+										if(plugin.isPaper() && !Bukkit.getBukkitVersion().equals("1.21.10-R0.1-SNAPSHOT")) {
+											((org.bukkit.craftbukkit.v1_21_R5.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+										}else ((org.bukkit.craftbukkit.v1_21_R6.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									}else if(plugin.getServerVersion().equals("v1_21_R7"))  ((org.bukkit.craftbukkit.v1_21_R7.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_21_R5")) ((org.bukkit.craftbukkit.v1_21_R5.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_21_R4")) ((org.bukkit.craftbukkit.v1_21_R4.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_21_R3")) ((org.bukkit.craftbukkit.v1_21_R3.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_21_R2")) ((org.bukkit.craftbukkit.v1_21_R2.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_21_R1")) ((org.bukkit.craftbukkit.v1_21_R1.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_20_R4")) ((org.bukkit.craftbukkit.v1_20_R4.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_20_R3")) ((org.bukkit.craftbukkit.v1_20_R3.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_20_R2")) ((org.bukkit.craftbukkit.v1_20_R2.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_20_R1")) ((org.bukkit.craftbukkit.v1_20_R1.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_19_R3")) ((org.bukkit.craftbukkit.v1_19_R3.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_19_R2")) ((org.bukkit.craftbukkit.v1_19_R2.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_19_R1")) ((org.bukkit.craftbukkit.v1_19_R1.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_18_R2")) ((org.bukkit.craftbukkit.v1_18_R2.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_18_R1")) ((org.bukkit.craftbukkit.v1_18_R1.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_17_R1")) ((org.bukkit.craftbukkit.v1_17_R1.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_16_R3")) ((org.bukkit.craftbukkit.v1_16_R3.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_16_R2")) ((org.bukkit.craftbukkit.v1_16_R2.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									if(plugin.getServerVersion().equals("v1_16_R1")) ((org.bukkit.craftbukkit.v1_16_R1.entity.CraftItemFrame) frames.get(i)).setVisible(visible);
+									
+									frames.get(i).setItem(itemStacks.getMap(image.getIds().get(i)));
+								}
+								
+								boolean[] visibles = {visible};
+								
+								Collection<Entity> entities = getNearbyEntities(frames.get(image.getIds().size()/2).getLocation(), 32);
+								
+								Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {	 	        	
+									for(Entity entity : entities) {
+										if(entity.getType() == EntityType.PLAYER) {
+											if(entity.getUniqueId() != player.getUniqueId()) {
+												
+												Location first = frames.get(0).getLocation();
+												frames.get(0).remove();
+												
+												ItemFrame itemFrame = (ItemFrame) player.getWorld().spawnEntity(first, EntityType.ITEM_FRAME);
+												itemFrame.setItem(new ItemStacks().getMap(image.getIds().get(0)));
+												
+												if(plugin.getServerVersion().equals("v26_1")) ((org.bukkit.craftbukkit.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												
+												if(plugin.getServerVersion().equals("v1_21_R6")) {
+													if(plugin.isPaper() && !Bukkit.getBukkitVersion().equals("1.21.10-R0.1-SNAPSHOT")) {
+														((org.bukkit.craftbukkit.v1_21_R5.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+													}else ((org.bukkit.craftbukkit.v1_21_R6.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												}else if(plugin.getServerVersion().equals("v1_21_R7")) ((org.bukkit.craftbukkit.v1_21_R7.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_21_R5")) ((org.bukkit.craftbukkit.v1_21_R5.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_21_R4")) ((org.bukkit.craftbukkit.v1_21_R4.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_21_R3")) ((org.bukkit.craftbukkit.v1_21_R3.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_21_R2")) ((org.bukkit.craftbukkit.v1_21_R2.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_21_R1")) ((org.bukkit.craftbukkit.v1_21_R1.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_20_R4")) ((org.bukkit.craftbukkit.v1_20_R4.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_20_R3")) ((org.bukkit.craftbukkit.v1_20_R3.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_20_R2")) ((org.bukkit.craftbukkit.v1_20_R2.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_20_R1")) ((org.bukkit.craftbukkit.v1_20_R1.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_19_R3")) ((org.bukkit.craftbukkit.v1_19_R3.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_19_R2")) ((org.bukkit.craftbukkit.v1_19_R2.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_19_R1")) ((org.bukkit.craftbukkit.v1_19_R1.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_18_R2")) ((org.bukkit.craftbukkit.v1_18_R2.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_18_R1")) ((org.bukkit.craftbukkit.v1_18_R1.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_17_R1")) ((org.bukkit.craftbukkit.v1_17_R1.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_16_R3")) ((org.bukkit.craftbukkit.v1_16_R3.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_16_R2")) ((org.bukkit.craftbukkit.v1_16_R2.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+												if(plugin.getServerVersion().equals("v1_16_R1")) ((org.bukkit.craftbukkit.v1_16_R1.entity.CraftItemFrame) itemFrame).setVisible(visibles[0]);
+											}
+										}
+									}
+					 	        }, 0L);
+								
+								if(plugin.getScreensFrames().containsKey((ItemFrame) event.getRightClicked())) {
+									
+									Screen screen = plugin.getScreensFrames().get((ItemFrame) event.getRightClicked());
+									
+									UUID uuid = UUID.randomUUID();
+									
+									Content content = new Content(new File(screen.getContentsFolder(), uuid.toString() + ".yml"));
+									content.createConfiguration(screen, uuid, image.getFile(), ContentType.IMAGE, screen.getFrames().indexOf((ItemFrame) event.getRightClicked()));
+								}
+								
+								player.sendMessage(configuration.image_placed(image.getName()));
+								SoundPlayer.playSound(player, SoundType.NOTIFICATION_UP);
+							}
 						}
 					}
 				}

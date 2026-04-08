@@ -146,11 +146,13 @@ public class ResourcePack {
 	* 64 is for versions 1.21.8
 	* 69 is for versions 1.21.9 - 1.21.10
 	* 75 is for versions 1.21.11
+	* 84 is for versions 26.1
 	* 
 	* @return The resource pack-format.
 	*/
 	
 	public int getResourcePackFormat() {
+		if(plugin.getServerVersion().equals("v26_1")) return 84;
 		if(plugin.getServerVersion().equals("v1_21_R7")) return 75;
 		if(plugin.getServerVersion().equals("v1_21_R6")) return 69;
         if(plugin.getServerVersion().equals("v1_21_R5")) return 64;
